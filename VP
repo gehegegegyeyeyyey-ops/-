@@ -1,0 +1,160 @@
+-- โหลด Rayfield Library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- สร้าง Window หลัก
+local Window = Rayfield:CreateWindow({
+   Name = "Player Hub | Rayfield UI",
+   LoadingTitle = "กำลังโหลดระบบ...",
+   LoadingSubtitle = "by Assistant",
+   ConfigurationSaving = { Enabled = false },
+   KeySystem = false
+})
+
+-- สร้าง Tabs
+local MainTab = Window:CreateTab("ฟังก์ชันหลัก", 4483362458)
+local VisualTab = Window:CreateTab("มอง (ESP)", 4483362458)
+
+--------------------------------------------------------------------
+-- [แท็บที่ 1] ฟังก์ชันหลัก
+--------------------------------------------------------------------
+
+local NoclipConnection = nil
+local InfiniteJumpConnection = nil
+local GodModeConnection = nil
+
+-- 1. ล่องหน (Invisibility)
+MainTab:CreateToggle({
+   Name = "1. ล่องหน (Invis)",
+   CurrentValue = false,
+   Callback = function(Value)
+      local char = game.Players.LocalPlayer.Character
+      if char then
+         for _, v in pairs(char:GetDescendants()) do
+            if v:IsA("BasePart") or v:IsA("Decal") then
+               if v.Name ~= "HumanoidRootPart" then
+                  v.Transparency = Value and 1 or 0
+               end
+            end
+         end
+      end
+   end,
+})
+
+-- 2. เดินทะลุ (Noclip)
+MainTab:CreateToggle({
+   Name = "2. ทะลุ (Noclip)",
+   CurrentValue = false,
+   Callback = function(Value)
+      if Value then
+         NoclipConnection = game:GetService("RunService").Stepped:Connect(function()
+            local char = game.Players.LocalPlayer.Character
+            if char then
+               for _, v in pairs(char:GetChildren()) do
+                  if v:IsA("BasePart") then
+                     v.CanCollide = false
+                  end
+               end
+            end
+         end)
+      else
+         if NoclipConnection then NoclipConnection:Disconnect() end
+      end
+   end,
+})
+
+-- 3. ลบหมอก (No Fog)
+MainTab:CreateButton({
+   Name = "3. ลบหมอก (No Fog)",
+   Callback = function()
+      game:GetService("Lighting").FogEnd = 9e9
+      for _, v in pairs(game:GetService("Lighting"):GetChildren()) do
+         if v:IsA("Atmosphere") then
+            v:Destroy()
+         end
+      end
+      Rayfield:Notify({
+         Title = "สำเร็จ!",
+         Content = "ทำการลบหมอกเรียบร้อยแล้ว",
+         Duration = 3,
+      })
+   end,
+})
+
+-- 4. บิน (Arceus X Fly V2 - รวมสคริปต์ภายนอกไว้ให้แล้ว)
+MainTab:CreateButton({
+   Name = "4. เปิดเมนูบิน (Arceus Fly V2)",
+   Callback = function()
+      -- ดึงโค้ดบินจากลิงก์ที่ถอดรหัสแล้วมารันโดยตรง
+      local success, err = pcall(function()
+         loadstring(game:HttpGet("https://gist.githubusercontent.com/meozoneYT/bf037dff9f0a70017304ddd67fdcd370/raw/e14e74f425b060df523343cf30b787074eb3c5d2/arceus%2520x%2520fly%25202%2520obflucator", true))()
+      end)
+      
+      if success then
+         Rayfield:Notify({
+            Title = "ระบบบิน",
+            Content = "เรียกใช้งาน Arceus Fly V2 เรียบร้อยแล้ว!",
+            Duration = 3,
+         })
+      else
+         Rayfield:Notify({
+            Title = "เกิดข้อผิดพลาด",
+            Content = "ไม่สามารถโหลดสคริปต์บินได้ (ลิงก์อาจเสีย)",
+            Duration = 3,
+         })
+      end
+   end,
+})
+
+-- 5. กระโดดไม่จำกัด (Infinite Jump)
+MainTab:CreateToggle({
+   Name = "5. กระโดดไม่จำกัด (Inf Jump)",
+   CurrentValue = false,
+   Callback = function(Value)
+      if Value then
+         InfiniteJumpConnection = game:GetService("UserInputService").JumpRequest:Connect(function()
+            local char = game.Players.LocalPlayer.Character
+            if char and char:FindFirstChild("Humanoid") then
+               char.Humanoid:ChangeState("Jumping")
+            end
+         end)
+      else
+         if InfiniteJumpConnection then InfiniteJumpConnection:Disconnect() end
+      end
+   end,
+})
+
+-- 6. อมตะ (God Mode)
+MainTab:CreateToggle({
+   Name = "6. อมตะ (God Mode)",
+   CurrentValue = false,
+   Callback = function(Value)
+      local char = game.Players.LocalPlayer.Character
+      if char and char:FindFirstChild("Humanoid") then
+         if Value then
+            GodModeConnection = char.Humanoid.HealthChanged:Connect(function()
+               char.Humanoid.Health = char.Humanoid.MaxHealth
+            end)
+            char.Humanoid.Health = char.Humanoid.MaxHealth
+         else
+            if GodModeConnection then GodModeConnection:Disconnect() end
+         end
+      end
+   end,
+})
+
+--------------------------------------------------------------------
+-- [แท็บที่ 2] มอง (ESP System)
+--------------------------------------------------------------------
+
+local ESPEnabled = false
+
+local function ApplyESP(plr)
+   if plr ~= game.Players.LocalPlayer then
+      plr.CharacterAdded:Connect(function(char)
+         if ESPEnabled then
+            task.wait(0.5)
+            if not char:FindFirstChild("ESP_Highlight") then
+               local hl = Instance.new("Highlight")
+               hl.Name = "ESP_Highlight"
+               hl.FillColor = Color3.fromRGB(255, 0, 0)
+               hl.OutlineColor = Color3.f
